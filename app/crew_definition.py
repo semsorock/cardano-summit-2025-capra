@@ -1,4 +1,6 @@
-from crewai import Agent, Crew, Task
+import os
+
+from crewai import Agent, Crew, LLM, Task
 from logging_config import get_logger
 import requests
 from bs4 import BeautifulSoup
@@ -60,7 +62,12 @@ class ResearchCrew:
         
         # Fetch content from URL
         url_content = fetch_url_content(url)
-        
+
+        llm = LLM(
+            model="gemini/gemini-2.5-flash",
+            api_key=os.getenv("GEMINI_API_KEY"),
+            temperature=0.1,
+        )
         # Create Content Scraper Agent
         content_scraper = Agent(
             role='Content Scraper',
@@ -69,7 +76,8 @@ class ResearchCrew:
                       'from web pages, including all titles, descriptions, and other information '
                       'exactly as they appear on the page.',
             verbose=self.verbose,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=llm
         )
         
         # Create Markdown Formatter Agent
@@ -80,7 +88,8 @@ class ResearchCrew:
                       'well-organized markdown documentation that preserves exact details from the source '
                       'without adding interpretation or analysis.',
             verbose=self.verbose,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=llm
         )
         
         self.logger.info("Created content scraper and markdown formatter agents")
